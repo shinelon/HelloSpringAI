@@ -1,5 +1,6 @@
 package com.shinelon.hello.service.impl;
 
+import com.shinelon.hello.common.utils.DesensitizationUtils;
 import com.shinelon.hello.manager.ToolChatManager;
 import com.shinelon.hello.model.dto.ToolChatRequestDTO;
 import com.shinelon.hello.model.vo.ToolChatVO;
@@ -28,12 +29,15 @@ public class ToolChatServiceImpl implements ToolChatService {
     public ToolChatVO chat(ToolChatRequestDTO request) {
         validateRequest(request);
 
-        log.info("Tool chat: enabledTools={}", request.getEnabledTools());
+        log.info("[chat] Tool调用请求开始, enabledTools={}, content={}",
+                request.getEnabledTools(), DesensitizationUtils.truncateAndMask(request.getContent(), 50));
 
         String response = toolChatManager.syncCall(
                 request.getContent(),
                 request.getEnabledTools()
         );
+
+        log.info("[chat] Tool调用完成, 响应长度={}", response.length());
 
         return ToolChatVO.builder()
                 .content(response)
@@ -45,14 +49,15 @@ public class ToolChatServiceImpl implements ToolChatService {
     public Flux<ToolChatVO> chatStream(ToolChatRequestDTO request) {
         validateRequest(request);
 
-        log.info("Tool stream chat: enabledTools={}", request.getEnabledTools());
+        log.info("[chatStream] Tool流式调用开始, enabledTools={}, content={}",
+                request.getEnabledTools(), DesensitizationUtils.truncateAndMask(request.getContent(), 50));
 
         return toolChatManager.streamCall(request.getContent(), request.getEnabledTools())
                 .map(chunk -> ToolChatVO.builder()
                         .content(chunk)
                         .createTime(LocalDateTime.now())
                         .build())
-                .doOnError(e -> log.error("Tool stream chat error: {}", e.getMessage(), e));
+                .doOnError(e -> log.error("[chatStream] Tool流式调用错误, error={}", e.getMessage(), e));
     }
 
     @Override

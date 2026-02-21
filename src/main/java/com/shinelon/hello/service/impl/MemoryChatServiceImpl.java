@@ -1,5 +1,6 @@
 package com.shinelon.hello.service.impl;
 
+import com.shinelon.hello.common.utils.DesensitizationUtils;
 import com.shinelon.hello.manager.MemoryChatManager;
 import com.shinelon.hello.model.dto.MemoryChatRequestDTO;
 import com.shinelon.hello.model.vo.MemoryChatVO;
@@ -27,12 +28,17 @@ public class MemoryChatServiceImpl implements MemoryChatService {
     public MemoryChatVO chat(MemoryChatRequestDTO request) {
         validateRequest(request);
 
-        log.info("Memory chat: conversationId={}", request.getConversationId());
+        log.info("[chat] Memory调用请求开始, conversationId={}, content={}",
+                DesensitizationUtils.maskId(request.getConversationId()),
+                DesensitizationUtils.truncateAndMask(request.getContent(), 50));
 
         String response = memoryChatManager.syncCall(
                 request.getConversationId(),
                 request.getContent()
         );
+
+        log.info("[chat] Memory调用完成, conversationId={}, 响应长度={}",
+                DesensitizationUtils.maskId(request.getConversationId()), response.length());
 
         return MemoryChatVO.builder()
                 .conversationId(request.getConversationId())
@@ -45,7 +51,9 @@ public class MemoryChatServiceImpl implements MemoryChatService {
     public Flux<MemoryChatVO> chatStream(MemoryChatRequestDTO request) {
         validateRequest(request);
 
-        log.info("Memory stream chat: conversationId={}", request.getConversationId());
+        log.info("[chatStream] Memory流式调用开始, conversationId={}, content={}",
+                DesensitizationUtils.maskId(request.getConversationId()),
+                DesensitizationUtils.truncateAndMask(request.getContent(), 50));
 
         String conversationId = request.getConversationId();
 
@@ -55,7 +63,8 @@ public class MemoryChatServiceImpl implements MemoryChatService {
                         .content(chunk)
                         .createTime(LocalDateTime.now())
                         .build())
-                .doOnError(e -> log.error("Memory stream chat error: {}", e.getMessage(), e));
+                .doOnError(e -> log.error("[chatStream] Memory流式调用错误, conversationId={}, error={}",
+                        DesensitizationUtils.maskId(conversationId), e.getMessage(), e));
     }
 
     @Override
@@ -64,8 +73,9 @@ public class MemoryChatServiceImpl implements MemoryChatService {
             throw new IllegalArgumentException("会话ID不能为空");
         }
 
-        log.info("Clearing memory: conversationId={}", conversationId);
+        log.info("[clearMemory] 清除记忆开始, conversationId={}", DesensitizationUtils.maskId(conversationId));
         memoryChatManager.clearMemory(conversationId);
+        log.info("[clearMemory] 清除记忆完成, conversationId={}", DesensitizationUtils.maskId(conversationId));
     }
 
     /**

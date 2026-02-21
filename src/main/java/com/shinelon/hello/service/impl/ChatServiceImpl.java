@@ -3,6 +3,7 @@ package com.shinelon.hello.service.impl;
 import com.shinelon.hello.common.constants.CommonConstants;
 import com.shinelon.hello.common.enums.ErrorCodeEnum;
 import com.shinelon.hello.common.exception.BusinessException;
+import com.shinelon.hello.common.utils.DesensitizationUtils;
 import com.shinelon.hello.dao.ChatMessageDao;
 import com.shinelon.hello.dao.ChatSessionDao;
 import com.shinelon.hello.manager.ZhipuAiManager;
@@ -51,14 +52,19 @@ public class ChatServiceImpl implements ChatService {
         String sessionId = request.getSessionId();
         boolean isNewSession = sessionId == null || sessionId.trim().isEmpty();
 
+        log.info("[chat] 请求开始, sessionId={}, isNewSession={}, content={}",
+                sessionId, isNewSession, DesensitizationUtils.truncateAndMask(request.getContent(), 50));
+
         // 获取或创建会话
         ChatSessionDO session;
         if (isNewSession) {
             session = createNewSession(request.getContent());
             sessionId = session.getSessionId();
+            log.debug("[chat] 创建新会话: sessionId={}", sessionId);
         } else {
             session = chatSessionDao.findBySessionId(sessionId)
                     .orElseThrow(() -> new BusinessException(ErrorCodeEnum.NOT_FOUND, "会话不存在"));
+            log.debug("[chat] 使用已有会话: sessionId={}", sessionId);
         }
 
         // 保存用户消息
@@ -66,7 +72,10 @@ public class ChatServiceImpl implements ChatService {
 
         // 获取历史消息并调用AI
         List<Message> messages = buildMessages(sessionId);
+        log.debug("[chat] AI调用开始, 消息数量={}", messages.size());
+
         String aiResponse = zhipuAiManager.syncCallWithHistory(messages);
+        log.info("[chat] AI调用成功, sessionId={}, 响应长度={}", sessionId, aiResponse.length());
 
         // 保存AI回复
         ChatMessageDO assistantMessage = saveMessage(sessionId, "assistant", aiResponse);
@@ -75,6 +84,7 @@ public class ChatServiceImpl implements ChatService {
         session.setUpdateTime(LocalDateTime.now());
         chatSessionDao.save(session);
 
+        log.info("[chat] 请求完成, sessionId={}", sessionId);
         return buildMessageVO(sessionId, assistantMessage);
     }
 
@@ -87,10 +97,14 @@ public class ChatServiceImpl implements ChatService {
         String inputSessionId = request.getSessionId();
         boolean isNewSession = inputSessionId == null || inputSessionId.trim().isEmpty();
 
+        log.info("[chatStream] 流式调用开始, sessionId={}, isNewSession={}, content={}",
+                inputSessionId, isNewSession, DesensitizationUtils.truncateAndMask(request.getContent(), 50));
+
         // 获取或创建会话
         ChatSessionDO session;
         if (isNewSession) {
             session = createNewSession(request.getContent());
+            log.debug("[chatStream] 创建新会话: sessionId={}", session.getSessionId());
         } else {
             session = chatSessionDao.findBySessionId(inputSessionId)
                     .orElseThrow(() -> new BusinessException(ErrorCodeEnum.NOT_FOUND, "会话不存在"));
@@ -103,6 +117,7 @@ public class ChatServiceImpl implements ChatService {
 
         // 获取历史消息
         List<Message> messages = buildMessages(sessionId);
+        log.debug("[chatStream] 流式AI调用开始, 消息数量={}", messages.size());
 
         // 使用 AtomicReference 确保线程安全
         final AtomicReference<StringBuilder> responseAccumulator =
@@ -122,8 +137,9 @@ public class ChatServiceImpl implements ChatService {
                     saveMessage(sessionId, "assistant", fullResponse);
                     session.setUpdateTime(LocalDateTime.now());
                     chatSessionDao.save(session);
+                    log.info("[chatStream] 流式调用完成, sessionId={}, 响应长度={}", sessionId, fullResponse.length());
                 })
-                .doOnError(e -> log.error("Stream chat error: {}", e.getMessage(), e));
+                .doOnError(e -> log.error("[chatStream] 流式调用错误, sessionId={}, error={}", sessionId, e.getMessage(), e));
     }
 
     @Override
@@ -133,12 +149,14 @@ public class ChatServiceImpl implements ChatService {
         session.setSessionId(UUID.randomUUID().toString());
         session.setTitle("新会话");
         chatSessionDao.save(session);
-        log.info("Created new session: {}", session.getSessionId());
+        log.info("[createSession] 创建会话成功, sessionId={}", session.getSessionId());
         return session.getSessionId();
     }
 
     @Override
     public SessionVO getSession(String sessionId) {
+        log.debug("[getSession] 查询会话, sessionId={}", sessionId);
+
         ChatSessionDO session = chatSessionDao.findBySessionId(sessionId)
                 .orElseThrow(() -> new BusinessException(ErrorCodeEnum.NOT_FOUND, "会话不存在"));
 
@@ -151,6 +169,9 @@ public class ChatServiceImpl implements ChatService {
                         .createTime(msg.getCreateTime())
                         .build())
                 .collect(Collectors.toList());
+
+        log.info("[getSession] 查询会话成功, sessionId={}, title={}, 消息数量={}",
+                sessionId, session.getTitle(), messages.size());
 
         return SessionVO.builder()
                 .sessionId(session.getSessionId())
@@ -179,13 +200,15 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional
     public void deleteSession(String sessionId) {
+        log.info("[deleteSession] 删除会话开始, sessionId={}", sessionId);
+
         if (!chatSessionDao.existsBySessionId(sessionId)) {
             throw new BusinessException(ErrorCodeEnum.NOT_FOUND, "会话不存在");
         }
 
         // 级联删除消息（由外键约束处理）
         chatSessionDao.deleteBySessionId(sessionId);
-        log.info("Deleted session: {}", sessionId);
+        log.info("[deleteSession] 删除会话成功, sessionId={}", sessionId);
     }
 
     /**

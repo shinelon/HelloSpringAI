@@ -45,15 +45,20 @@ public class ZhipuAiManager {
     public String syncCall(String prompt) {
         validatePrompt(prompt);
 
-        log.debug("Sync call with prompt: {}", truncate(prompt, 100));
+        log.debug("[syncCall] 同步调用开始, prompt={}", truncate(prompt, 100));
+        long startTime = System.currentTimeMillis();
 
         try {
-            return chatClient.prompt()
+            String response = chatClient.prompt()
                     .user(prompt)
                     .call()
                     .content();
+            long costTime = System.currentTimeMillis() - startTime;
+            log.info("[syncCall] 同步调用成功, 耗时={}ms, 响应长度={}", costTime, response.length());
+            return response;
         } catch (Exception e) {
-            log.error("Failed to call ZhipuAI: {}", e.getMessage(), e);
+            long costTime = System.currentTimeMillis() - startTime;
+            log.error("[syncCall] 同步调用失败, 耗时={}ms, error={}", costTime, e.getMessage(), e);
             throw new BusinessException(ErrorCodeEnum.AI_SERVICE_UNAVAILABLE, "AI服务调用失败", e);
         }
     }
@@ -68,16 +73,21 @@ public class ZhipuAiManager {
     public String syncCall(String systemPrompt, String userPrompt) {
         validatePrompt(userPrompt);
 
-        log.debug("Sync call with system prompt and user prompt");
+        log.debug("[syncCall] 带系统提示的同步调用开始, userPrompt={}", truncate(userPrompt, 100));
+        long startTime = System.currentTimeMillis();
 
         try {
-            return chatClient.prompt()
+            String response = chatClient.prompt()
                     .system(systemPrompt)
                     .user(userPrompt)
                     .call()
                     .content();
+            long costTime = System.currentTimeMillis() - startTime;
+            log.info("[syncCall] 带系统提示的同步调用成功, 耗时={}ms, 响应长度={}", costTime, response.length());
+            return response;
         } catch (Exception e) {
-            log.error("Failed to call ZhipuAI: {}", e.getMessage(), e);
+            long costTime = System.currentTimeMillis() - startTime;
+            log.error("[syncCall] 带系统提示的同步调用失败, 耗时={}ms, error={}", costTime, e.getMessage(), e);
             throw new BusinessException(ErrorCodeEnum.AI_SERVICE_UNAVAILABLE, "AI服务调用失败", e);
         }
     }
@@ -93,15 +103,20 @@ public class ZhipuAiManager {
             throw new IllegalArgumentException("消息列表不能为空");
         }
 
-        log.debug("Sync call with {} messages", messages.size());
+        log.debug("[syncCallWithHistory] 带历史消息的同步调用开始, 消息数量={}", messages.size());
+        long startTime = System.currentTimeMillis();
 
         try {
-            return chatClient.prompt()
+            String response = chatClient.prompt()
                     .messages(messages)
                     .call()
                     .content();
+            long costTime = System.currentTimeMillis() - startTime;
+            log.info("[syncCallWithHistory] 带历史消息的同步调用成功, 耗时={}ms, 响应长度={}", costTime, response.length());
+            return response;
         } catch (Exception e) {
-            log.error("Failed to call ZhipuAI with history: {}", e.getMessage(), e);
+            long costTime = System.currentTimeMillis() - startTime;
+            log.error("[syncCallWithHistory] 带历史消息的同步调用失败, 耗时={}ms, error={}", costTime, e.getMessage(), e);
             throw new BusinessException(ErrorCodeEnum.AI_SERVICE_UNAVAILABLE, "AI服务调用失败", e);
         }
     }
@@ -115,15 +130,21 @@ public class ZhipuAiManager {
     public Flux<String> streamCall(String prompt) {
         validatePrompt(prompt);
 
-        log.debug("Stream call with prompt: {}", truncate(prompt, 100));
+        log.debug("[streamCall] 流式调用开始, prompt={}", truncate(prompt, 100));
+        long startTime = System.currentTimeMillis();
 
         try {
             return chatClient.prompt()
                     .user(prompt)
                     .stream()
-                    .content();
+                    .content()
+                    .doOnComplete(() -> {
+                        long costTime = System.currentTimeMillis() - startTime;
+                        log.info("[streamCall] 流式调用完成, 耗时={}ms", costTime);
+                    });
         } catch (Exception e) {
-            log.error("Failed to stream call ZhipuAI: {}", e.getMessage(), e);
+            long costTime = System.currentTimeMillis() - startTime;
+            log.error("[streamCall] 流式调用失败, 耗时={}ms, error={}", costTime, e.getMessage(), e);
             return Flux.error(new BusinessException(ErrorCodeEnum.AI_SERVICE_UNAVAILABLE, "AI服务调用失败", e));
         }
     }
@@ -139,15 +160,21 @@ public class ZhipuAiManager {
             throw new IllegalArgumentException("消息列表不能为空");
         }
 
-        log.debug("Stream call with {} messages", messages.size());
+        log.debug("[streamCallWithHistory] 带历史消息的流式调用开始, 消息数量={}", messages.size());
+        long startTime = System.currentTimeMillis();
 
         try {
             return chatClient.prompt()
                     .messages(messages)
                     .stream()
-                    .content();
+                    .content()
+                    .doOnComplete(() -> {
+                        long costTime = System.currentTimeMillis() - startTime;
+                        log.info("[streamCallWithHistory] 带历史消息的流式调用完成, 耗时={}ms", costTime);
+                    });
         } catch (Exception e) {
-            log.error("Failed to stream call ZhipuAI with history: {}", e.getMessage(), e);
+            long costTime = System.currentTimeMillis() - startTime;
+            log.error("[streamCallWithHistory] 带历史消息的流式调用失败, 耗时={}ms, error={}", costTime, e.getMessage(), e);
             return Flux.error(new BusinessException(ErrorCodeEnum.AI_SERVICE_UNAVAILABLE, "AI服务调用失败", e));
         }
     }
