@@ -243,13 +243,14 @@ class CalculatorToolTest {
 
         @ParameterizedTest(name = "[{index}] {0}")
         @MethodSource("com.shinelon.hello.tool.CalculatorToolTest#divideByZeroTestCases")
-        @DisplayName("除零应返回错误信息")
-        void divide_byZero_shouldReturnError(ErrorHandlingTestCase testCase) {
-            // When
-            String result = calculatorTool.divide(testCase.a(), testCase.b());
-
-            // Then
-            assertTrue(result.contains(testCase.expectedErrorFragment()),
+        @DisplayName("除零应抛出异常")
+        void divide_byZero_shouldThrowException(ErrorHandlingTestCase testCase) {
+            // When & Then
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> calculatorTool.divide(testCase.a(), testCase.b())
+            );
+            assertTrue(exception.getMessage().contains(testCase.expectedErrorFragment()),
                     () -> testCase.name() + " 应包含错误信息: " + testCase.expectedErrorFragment());
         }
     }
@@ -289,13 +290,14 @@ class CalculatorToolTest {
 
         @ParameterizedTest(name = "[{index}] {0}")
         @MethodSource("com.shinelon.hello.tool.CalculatorToolTest#squareRootNegativeTestCases")
-        @DisplayName("负数平方根应返回错误信息")
-        void squareRoot_negativeNumber_shouldReturnError(UnaryOperationTestCase testCase) {
-            // When
-            String result = calculatorTool.squareRoot(testCase.value());
-
-            // Then
-            assertTrue(result.contains(testCase.expected()),
+        @DisplayName("负数平方根应抛出异常")
+        void squareRoot_negativeNumber_shouldThrowException(UnaryOperationTestCase testCase) {
+            // When & Then
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> calculatorTool.squareRoot(testCase.value())
+            );
+            assertTrue(exception.getMessage().contains(testCase.expected()),
                     () -> testCase.name() + " 应包含错误信息: " + testCase.expected());
         }
     }
@@ -318,13 +320,14 @@ class CalculatorToolTest {
 
         @ParameterizedTest(name = "[{index}] {0}")
         @MethodSource("com.shinelon.hello.tool.CalculatorToolTest#moduloByZeroTestCases")
-        @DisplayName("模零应返回错误信息")
-        void modulo_byZero_shouldReturnError(ErrorHandlingTestCase testCase) {
-            // When
-            String result = calculatorTool.modulo(testCase.a(), testCase.b());
-
-            // Then
-            assertTrue(result.contains(testCase.expectedErrorFragment()),
+        @DisplayName("模零应抛出异常")
+        void modulo_byZero_shouldThrowException(ErrorHandlingTestCase testCase) {
+            // When & Then
+            IllegalArgumentException exception = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> calculatorTool.modulo(testCase.a(), testCase.b())
+            );
+            assertTrue(exception.getMessage().contains(testCase.expectedErrorFragment()),
                     () -> testCase.name() + " 应包含错误信息: " + testCase.expectedErrorFragment());
         }
     }

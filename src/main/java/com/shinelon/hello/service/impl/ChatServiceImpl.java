@@ -1,5 +1,6 @@
 package com.shinelon.hello.service.impl;
 
+import com.shinelon.hello.common.constants.CommonConstants;
 import com.shinelon.hello.common.enums.ErrorCodeEnum;
 import com.shinelon.hello.common.exception.BusinessException;
 import com.shinelon.hello.dao.ChatMessageDao;
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -39,8 +41,6 @@ public class ChatServiceImpl implements ChatService {
     private final ChatSessionDao chatSessionDao;
     private final ChatMessageDao chatMessageDao;
     private final ZhipuAiManager zhipuAiManager;
-
-    private static final int TITLE_MAX_LENGTH = 50;
 
     @Override
     @Transactional
@@ -104,12 +104,13 @@ public class ChatServiceImpl implements ChatService {
         // 获取历史消息
         List<Message> messages = buildMessages(sessionId);
 
-        // 流式调用AI
-        StringBuilder fullResponse = new StringBuilder();
+        // 使用 AtomicReference 确保线程安全
+        final AtomicReference<StringBuilder> responseAccumulator =
+                new AtomicReference<>(new StringBuilder());
 
         return zhipuAiManager.streamCallWithHistory(messages)
                 .map(chunk -> {
-                    fullResponse.append(chunk);
+                    responseAccumulator.get().append(chunk);
                     return MessageVO.builder()
                             .sessionId(sessionId)
                             .content(chunk)
@@ -117,7 +118,8 @@ public class ChatServiceImpl implements ChatService {
                 })
                 .doOnComplete(() -> {
                     // 流式完成后保存完整回复
-                    saveMessage(sessionId, "assistant", fullResponse.toString());
+                    String fullResponse = responseAccumulator.get().toString();
+                    saveMessage(sessionId, "assistant", fullResponse);
                     session.setUpdateTime(LocalDateTime.now());
                     chatSessionDao.save(session);
                 })
@@ -203,8 +205,8 @@ public class ChatServiceImpl implements ChatService {
         if (content == null || content.isEmpty()) {
             return "新会话";
         }
-        return content.length() > TITLE_MAX_LENGTH
-                ? content.substring(0, TITLE_MAX_LENGTH) + "..."
+        return content.length() > CommonConstants.TITLE_MAX_LENGTH
+                ? content.substring(0, CommonConstants.TITLE_MAX_LENGTH) + "..."
                 : content;
     }
 

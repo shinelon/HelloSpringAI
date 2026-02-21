@@ -1,6 +1,7 @@
 package com.shinelon.hello.controller;
 
 import com.shinelon.hello.common.result.Result;
+import com.shinelon.hello.common.utils.DesensitizationUtils;
 import com.shinelon.hello.model.dto.ToolChatRequestDTO;
 import com.shinelon.hello.model.vo.ToolChatVO;
 import com.shinelon.hello.service.ToolChatService;
@@ -37,7 +38,7 @@ public class ToolChatController {
     @PostMapping("/tool/chat")
     public Result<ToolChatVO> chat(@Valid @RequestBody ToolChatRequestDTO request) {
         log.info("Tool chat request: content={}, enabledTools={}",
-                truncate(request.getContent(), 50),
+                DesensitizationUtils.truncateAndMask(request.getContent(), 50),
                 request.getEnabledTools());
 
         ToolChatVO response = toolChatService.chat(request);
@@ -53,7 +54,7 @@ public class ToolChatController {
     @PostMapping(value = "/tool/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<ToolChatVO>> chatStream(@Valid @RequestBody ToolChatRequestDTO request) {
         log.info("Tool stream chat request: content={}, enabledTools={}",
-                truncate(request.getContent(), 50),
+                DesensitizationUtils.truncateAndMask(request.getContent(), 50),
                 request.getEnabledTools());
 
         return toolChatService.chatStream(request)
@@ -81,15 +82,5 @@ public class ToolChatController {
         log.info("Get available tools");
         List<String> tools = toolChatService.getAvailableTools();
         return Result.success(tools);
-    }
-
-    /**
-     * 截断字符串
-     */
-    private String truncate(String str, int maxLength) {
-        if (str == null) {
-            return null;
-        }
-        return str.length() > maxLength ? str.substring(0, maxLength) + "..." : str;
     }
 }

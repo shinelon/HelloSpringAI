@@ -1,6 +1,7 @@
 package com.shinelon.hello.controller;
 
 import com.shinelon.hello.common.result.Result;
+import com.shinelon.hello.common.utils.DesensitizationUtils;
 import com.shinelon.hello.model.dto.MemoryChatRequestDTO;
 import com.shinelon.hello.model.vo.MemoryChatVO;
 import com.shinelon.hello.service.MemoryChatService;
@@ -35,8 +36,8 @@ public class MemoryChatController {
     @PostMapping("/memory/chat")
     public Result<MemoryChatVO> chat(@Valid @RequestBody MemoryChatRequestDTO request) {
         log.info("Memory chat request: conversationId={}, content={}",
-                request.getConversationId(),
-                truncate(request.getContent(), 50));
+                DesensitizationUtils.maskId(request.getConversationId()),
+                DesensitizationUtils.truncateAndMask(request.getContent(), 50));
 
         MemoryChatVO response = memoryChatService.chat(request);
         return Result.success(response);
@@ -51,8 +52,8 @@ public class MemoryChatController {
     @PostMapping(value = "/memory/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<MemoryChatVO>> chatStream(@Valid @RequestBody MemoryChatRequestDTO request) {
         log.info("Memory stream chat request: conversationId={}, content={}",
-                request.getConversationId(),
-                truncate(request.getContent(), 50));
+                DesensitizationUtils.maskId(request.getConversationId()),
+                DesensitizationUtils.truncateAndMask(request.getContent(), 50));
 
         String conversationId = request.getConversationId();
 
@@ -80,18 +81,9 @@ public class MemoryChatController {
      */
     @DeleteMapping("/memory/{conversationId}")
     public Result<Void> clearMemory(@PathVariable String conversationId) {
-        log.info("Clear memory request: conversationId={}", conversationId);
+        log.info("Clear memory request: conversationId={}",
+                DesensitizationUtils.maskId(conversationId));
         memoryChatService.clearMemory(conversationId);
         return Result.success();
-    }
-
-    /**
-     * 截断字符串
-     */
-    private String truncate(String str, int maxLength) {
-        if (str == null) {
-            return null;
-        }
-        return str.length() > maxLength ? str.substring(0, maxLength) + "..." : str;
     }
 }

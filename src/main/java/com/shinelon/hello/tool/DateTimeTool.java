@@ -20,6 +20,12 @@ public class DateTimeTool {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+    /**
+     * 星期名称数组（周一到周日）
+     */
+    private static final String[] WEEK_DAY_NAMES = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
 
     /**
      * 获取当前的日期和时间
@@ -48,7 +54,7 @@ public class DateTimeTool {
      */
     @Tool(description = "获取当前的时间，返回格式为 HH:mm:ss")
     public String getCurrentTime() {
-        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        return LocalDateTime.now().format(TIME_FORMATTER);
     }
 
     /**
@@ -59,8 +65,7 @@ public class DateTimeTool {
     @Tool(description = "获取当前是星期几，返回星期几的中文名称")
     public String getDayOfWeek() {
         DayOfWeek dayOfWeek = LocalDate.now().getDayOfWeek();
-        String[] weekDays = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
-        return weekDays[dayOfWeek.getValue() - 1];
+        return WEEK_DAY_NAMES[dayOfWeek.getValue() - 1];
     }
 
     /**
@@ -75,8 +80,7 @@ public class DateTimeTool {
         try {
             LocalDate localDate = LocalDate.parse(date, DATE_FORMATTER);
             DayOfWeek dayOfWeek = localDate.getDayOfWeek();
-            String[] weekDays = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
-            return weekDays[dayOfWeek.getValue() - 1];
+            return WEEK_DAY_NAMES[dayOfWeek.getValue() - 1];
         } catch (Exception e) {
             return "日期格式错误，请使用 yyyy-MM-dd 格式";
         }

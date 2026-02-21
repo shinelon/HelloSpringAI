@@ -1,10 +1,12 @@
 package com.shinelon.hello.controller;
 
 import com.shinelon.hello.common.result.Result;
+import com.shinelon.hello.common.utils.DesensitizationUtils;
 import com.shinelon.hello.model.vo.SessionVO;
 import com.shinelon.hello.service.ChatService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -69,8 +71,11 @@ public class SessionController {
      * @return 会话详情（含历史消息）
      */
     @GetMapping("/{sessionId}")
-    public Result<SessionVO> getSession(@PathVariable String sessionId) {
-        log.info("Getting session: {}", sessionId);
+    public Result<SessionVO> getSession(
+            @PathVariable
+            @Pattern(regexp = "^[a-fA-F0-9\\-]{36}$", message = "会话ID格式不正确")
+            String sessionId) {
+        log.info("Getting session: {}", DesensitizationUtils.maskId(sessionId));
 
         SessionVO session = chatService.getSession(sessionId);
         return Result.success(session);
@@ -83,8 +88,11 @@ public class SessionController {
      * @return 操作结果
      */
     @DeleteMapping("/{sessionId}")
-    public Result<Void> deleteSession(@PathVariable String sessionId) {
-        log.info("Deleting session: {}", sessionId);
+    public Result<Void> deleteSession(
+            @PathVariable
+            @Pattern(regexp = "^[a-fA-F0-9\\-]{36}$", message = "会话ID格式不正确")
+            String sessionId) {
+        log.info("Deleting session: {}", DesensitizationUtils.maskId(sessionId));
 
         chatService.deleteSession(sessionId);
         return Result.success("删除成功", null);

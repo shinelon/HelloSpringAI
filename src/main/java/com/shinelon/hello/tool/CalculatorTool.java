@@ -69,13 +69,14 @@ public class CalculatorTool {
      * @param a 被除数
      * @param b 除数
      * @return 两数之商
+     * @throws IllegalArgumentException 当除数为0时抛出
      */
     @Tool(description = "计算两个数的商，返回 a / b 的结果。注意：除数不能为0")
     public String divide(
             @ToolParam(description = "被除数") double a,
             @ToolParam(description = "除数，不能为0") double b) {
         if (b == 0) {
-            return "错误：除数不能为0";
+            throw new IllegalArgumentException("除数不能为0");
         }
         BigDecimal result = BigDecimal.valueOf(a).divide(BigDecimal.valueOf(b), SCALE, RoundingMode.HALF_UP);
         return formatResult(result);
@@ -101,12 +102,13 @@ public class CalculatorTool {
      *
      * @param number 要计算平方根的数
      * @return 平方根
+     * @throws IllegalArgumentException 当数为负数时抛出
      */
     @Tool(description = "计算一个数的平方根，返回 sqrt(number) 的结果。注意：数必须非负")
     public String squareRoot(
             @ToolParam(description = "要计算平方根的数，必须非负") double number) {
         if (number < 0) {
-            return "错误：不能对负数求平方根";
+            throw new IllegalArgumentException("不能对负数求平方根");
         }
         double result = Math.sqrt(number);
         return formatResult(BigDecimal.valueOf(result));
@@ -118,13 +120,14 @@ public class CalculatorTool {
      * @param a 被除数
      * @param b 除数
      * @return 余数
+     * @throws IllegalArgumentException 当除数为0时抛出
      */
     @Tool(description = "计算 a 除以 b 的余数，返回 a % b 的结果")
     public String modulo(
             @ToolParam(description = "被除数") double a,
             @ToolParam(description = "除数") double b) {
         if (b == 0) {
-            return "错误：除数不能为0";
+            throw new IllegalArgumentException("除数不能为0");
         }
         BigDecimal result = BigDecimal.valueOf(a).remainder(BigDecimal.valueOf(b));
         return formatResult(result);

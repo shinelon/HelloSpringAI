@@ -106,7 +106,9 @@ public class ToolChatManager {
      * @return 工具名称列表
      */
     public List<String> getAvailableTools() {
-        return new ArrayList<>(toolMap.keySet());
+        List<String> tools = new ArrayList<>(toolMap.size());
+        tools.addAll(toolMap.keySet());
+        return tools;
     }
 
     /**
@@ -121,7 +123,7 @@ public class ToolChatManager {
             return toolMap.values().toArray();
         }
 
-        List<Object> tools = new ArrayList<>();
+        List<Object> tools = new ArrayList<>(Math.min(enabledTools.size(), toolMap.size()));
         for (String toolName : enabledTools) {
             Object tool = toolMap.get(toolName.toLowerCase());
             if (tool != null) {

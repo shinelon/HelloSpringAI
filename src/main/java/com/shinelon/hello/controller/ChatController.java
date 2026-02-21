@@ -1,6 +1,7 @@
 package com.shinelon.hello.controller;
 
 import com.shinelon.hello.common.result.Result;
+import com.shinelon.hello.common.utils.DesensitizationUtils;
 import com.shinelon.hello.model.dto.ChatRequestDTO;
 import com.shinelon.hello.model.vo.MessageVO;
 import com.shinelon.hello.service.ChatService;
@@ -34,8 +35,8 @@ public class ChatController {
     @PostMapping("/chat")
     public Result<MessageVO> chat(@Valid @RequestBody ChatRequestDTO request) {
         log.info("Chat request: sessionId={}, content={}",
-                request.getSessionId(),
-                truncate(request.getContent(), 50));
+                DesensitizationUtils.maskId(request.getSessionId()),
+                DesensitizationUtils.truncateAndMask(request.getContent(), 50));
 
         MessageVO response = chatService.chat(request);
         return Result.success(response);
@@ -50,8 +51,8 @@ public class ChatController {
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<MessageVO>> chatStream(@Valid @RequestBody ChatRequestDTO request) {
         log.info("Stream chat request: sessionId={}, content={}",
-                request.getSessionId(),
-                truncate(request.getContent(), 50));
+                DesensitizationUtils.maskId(request.getSessionId()),
+                DesensitizationUtils.truncateAndMask(request.getContent(), 50));
 
         String sessionId = request.getSessionId();
 
@@ -69,15 +70,5 @@ public class ChatController {
                                 .build()
                 ))
                 .doOnError(e -> log.error("Stream error: {}", e.getMessage(), e));
-    }
-
-    /**
-     * 截断字符串
-     */
-    private String truncate(String str, int maxLength) {
-        if (str == null) {
-            return null;
-        }
-        return str.length() > maxLength ? str.substring(0, maxLength) + "..." : str;
     }
 }

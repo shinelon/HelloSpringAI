@@ -104,12 +104,13 @@ class SessionControllerTest {
         @Test
         @DisplayName("获取不存在的会话 - 应返回404")
         void getSession_notExisting_shouldReturn404() throws Exception {
-            // Given
-            when(chatService.getSession(anyString()))
+            // Given - 使用有效的 UUID 格式
+            String nonExistingId = UUID.randomUUID().toString();
+            when(chatService.getSession(nonExistingId))
                     .thenThrow(new BusinessException(ErrorCodeEnum.NOT_FOUND));
 
             // When & Then
-            mockMvc.perform(get("/sessions/{sessionId}", "non-existent"))
+            mockMvc.perform(get("/sessions/{sessionId}", nonExistingId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(404));
         }
@@ -195,12 +196,13 @@ class SessionControllerTest {
         @Test
         @DisplayName("删除不存在的会话 - 应返回404")
         void deleteSession_notExisting_shouldReturn404() throws Exception {
-            // Given
+            // Given - 使用有效的 UUID 格式
+            String nonExistingId = UUID.randomUUID().toString();
             doThrow(new BusinessException(ErrorCodeEnum.NOT_FOUND))
-                    .when(chatService).deleteSession(anyString());
+                    .when(chatService).deleteSession(nonExistingId);
 
             // When & Then
-            mockMvc.perform(delete("/sessions/{sessionId}", "non-existent"))
+            mockMvc.perform(delete("/sessions/{sessionId}", nonExistingId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(404));
         }
