@@ -3,8 +3,11 @@ package com.shinelon.hello.controller;
 import com.shinelon.hello.common.result.Result;
 import com.shinelon.hello.model.vo.SessionVO;
 import com.shinelon.hello.service.ChatService;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -20,6 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/sessions")
 @RequiredArgsConstructor
+@Validated
 public class SessionController {
 
     private final ChatService chatService;
@@ -49,8 +53,8 @@ public class SessionController {
      */
     @GetMapping
     public Result<List<SessionVO>> listSessions(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "页码必须大于0") int page,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "每页大小必须大于0") @Max(value = 100, message = "每页大小不能超过100") int size) {
         log.info("Listing sessions: page={}, size={}", page, size);
 
         // 转换为0-based页码

@@ -2,9 +2,12 @@ package com.shinelon.hello.common.exception;
 
 import com.shinelon.hello.common.enums.ErrorCodeEnum;
 import com.shinelon.hello.common.result.Result;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -34,7 +37,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 处理参数校验异常
+     * 处理参数校验异常（@RequestBody）
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Result<Void>> handleValidationException(MethodArgumentNotValidException e) {
@@ -43,6 +46,47 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
 
         log.warn("Validation failed: {}", errorMessage);
+
+        Result<Void> result = Result.error(ErrorCodeEnum.PARAM_ERROR, errorMessage);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+    }
+
+    /**
+     * 处理参数校验异常（@RequestParam）
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Result<Void>> handleConstraintViolationException(ConstraintViolationException e) {
+        String errorMessage = e.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.joining(", "));
+
+        log.warn("Constraint violation: {}", errorMessage);
+
+        Result<Void> result = Result.error(ErrorCodeEnum.PARAM_ERROR, errorMessage);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+    }
+
+    /**
+     * 处理请求体解析异常
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Result<Void>> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        log.warn("Request body not readable: {}", e.getMessage());
+
+        String errorMessage = "请求体格式错误";
+
+        String exceptionMessage = e.getMessage();
+        if (exceptionMessage != null) {
+            if (exceptionMessage.contains("Required request body is missing")) {
+                errorMessage = "请求体不能为空";
+            } else if (exceptionMessage.contains("JSON parse error")) {
+                errorMessage = "JSON格式错误";
+            } else if (exceptionMessage.contains("conversationId")) {
+                errorMessage = "会话ID不能为空";
+            } else if (exceptionMessage.contains("content")) {
+                errorMessage = "消息内容不能为空";
+            }
+        }
 
         Result<Void> result = Result.error(ErrorCodeEnum.PARAM_ERROR, errorMessage);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);

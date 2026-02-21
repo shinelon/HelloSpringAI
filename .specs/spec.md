@@ -73,7 +73,10 @@ HelloSpringAI/
 │   │   │   │       ├── SessionVO.java
 │   │   │   │       └── MessageVO.java
 │   │   │   ├── config/                          # 配置类
-│   │   │   │   └── ZhipuAiConfig.java
+│   │   │   │   └── ChatMemoryConfig.java        # ChatMemory Bean 配置
+│   │   │   ├── tool/                            # 工具类
+│   │   │   │   ├── DateTimeTool.java            # 日期时间工具
+│   │   │   │   └── CalculatorTool.java          # 计算器工具
 │   │   │   └── common/                          # 公共组件
 │   │   │       ├── exception/
 │   │   │       │   ├── BusinessException.java
@@ -143,6 +146,46 @@ HelloSpringAI/
 - 记录消息内容和时间戳
 - 支持按会话查询历史消息
 - 会话删除时级联删除消息
+
+### 3.5 Chat Memory（对话记忆）
+
+**描述**：使用 Spring AI 的 Chat Memory 功能实现对话记忆
+
+**功能要求**：
+- 使用 InMemory 存储实现对话上下文记忆
+- 通过 conversationId 标识不同会话
+- AI 能记住之前的对话内容
+- 支持清除指定会话的记忆
+- 保留最近 20 条消息
+
+**技术实现**：
+- 使用 `MessageWindowChatMemory` 管理对话记忆
+- 使用 `InMemoryChatMemoryRepository` 存储对话历史
+- 通过 `MessageChatMemoryAdvisor` 将记忆与 ChatClient 集成
+
+### 3.6 Tool Calling（工具调用）
+
+**描述**：使用 Spring AI 的 Tool Calling 功能让 AI 调用外部工具
+
+**功能要求**：
+- 提供日期时间工具（DateTimeTool）
+  - 获取当前日期时间
+  - 获取当前日期
+  - 获取当前时间
+  - 获取当前星期几
+  - 查询指定日期是星期几
+- 提供计算器工具（CalculatorTool）
+  - 加减乘除运算
+  - 幂运算
+  - 平方根运算
+  - 取模运算
+- AI 自动判断何时调用工具
+- 支持选择性启用部分工具
+
+**技术实现**：
+- 使用 `@Tool` 注解定义工具方法
+- 使用 `@ToolParam` 注解定义参数说明
+- 通过 ChatClient 的 `.tools()` 方法传递工具
 
 ---
 
@@ -224,7 +267,111 @@ DELETE /ai/sessions/{sessionId}
 Response: { "code": 200, "message": "删除成功" }
 ```
 
-### 4.4 统一响应格式
+### 4.5 Chat Memory 接口
+
+**带记忆的同步对话**
+```
+POST /ai/learn/memory/chat
+Content-Type: application/json
+
+{
+    "conversationId": "conv-001",  // 必填，会话标识
+    "content": "你好"              // 必填，用户消息
+}
+
+Response:
+{
+    "code": 200,
+    "message": "success",
+    "data": {
+        "conversationId": "conv-001",
+        "content": "AI的回复内容",
+        "createTime": "2026-02-21 10:30:00"
+    }
+}
+```
+
+**带记忆的流式对话**
+```
+POST /ai/learn/memory/chat/stream
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+    "conversationId": "conv-001",
+    "content": "你好"
+}
+
+Response: (SSE)
+data: {"conversationId":"conv-001","content":"你"}
+
+data: {"conversationId":"conv-001","content":"好"}
+
+data: {"conversationId":"conv-001","content":"","createTime":"2026-02-21T10:30:00"}
+event: done
+```
+
+**清除会话记忆**
+```
+DELETE /ai/learn/memory/{conversationId}
+Response: { "code": 200, "message": "success" }
+```
+
+### 4.6 Tool Calling 接口
+
+**带工具的同步对话**
+```
+POST /ai/learn/tool/chat
+Content-Type: application/json
+
+{
+    "content": "今天星期几？帮我算一下 123 + 456",  // 必填
+    "enabledTools": ["datetime", "calculator"]      // 可选，不填使用全部工具
+}
+
+Response:
+{
+    "code": 200,
+    "message": "success",
+    "data": {
+        "content": "今天是星期五，123 + 456 = 579",
+        "createTime": "2026-02-21 10:30:00"
+    }
+}
+```
+
+**带工具的流式对话**
+```
+POST /ai/learn/tool/chat/stream
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+    "content": "现在几点了？",
+    "enabledTools": ["datetime"]
+}
+
+Response: (SSE)
+data: {"content":"现"}
+
+data: {"content":"在"}
+
+data: {"content":"","createTime":"2026-02-21T10:30:00"}
+event: done
+```
+
+**获取可用工具列表**
+```
+GET /ai/learn/tool/list
+Response:
+{
+    "code": 200,
+    "message": "success",
+    "data": ["datetime", "calculator"]
+}
+```
+
+### 4.7 统一响应格式
 
 ```json
 {

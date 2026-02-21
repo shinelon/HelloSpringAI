@@ -30,6 +30,28 @@
 | 11 | C04 | 流式对话 - 正常流式返回 | /chat/stream | POST | [ ] |
 | 12 | C05 | 流式对话 - SSE格式验证 | /chat/stream | POST | [ ] |
 
+### Chat Memory 模块
+
+| 序号 | 任务ID | 测试项 | 接口 | 方法 | 状态 |
+|------|--------|--------|------|------|------|
+| 13 | M01 | 带记忆对话 - 正常调用 | /learn/memory/chat | POST | [ ] |
+| 14 | M02 | 带记忆对话 - 空会话ID | /learn/memory/chat | POST | [ ] |
+| 15 | M03 | 带记忆对话 - 空消息内容 | /learn/memory/chat | POST | [ ] |
+| 16 | M04 | 带记忆对话 - 记忆功能验证 | /learn/memory/chat | POST | [ ] |
+| 17 | M05 | 带记忆流式对话 - 正常调用 | /learn/memory/chat/stream | POST | [ ] |
+| 18 | M06 | 清除记忆 - 正常清除 | /learn/memory/{conversationId} | DELETE | [ ] |
+
+### Tool Calling 模块
+
+| 序号 | 任务ID | 测试项 | 接口 | 方法 | 状态 |
+|------|--------|--------|------|------|------|
+| 19 | T01 | 带工具对话 - 日期时间工具 | /learn/tool/chat | POST | [ ] |
+| 20 | T02 | 带工具对话 - 计算器工具 | /learn/tool/chat | POST | [ ] |
+| 21 | T03 | 带工具对话 - 空消息内容 | /learn/tool/chat | POST | [ ] |
+| 22 | T04 | 带工具对话 - 选择性启用工具 | /learn/tool/chat | POST | [ ] |
+| 23 | T05 | 带工具流式对话 - 正常调用 | /learn/tool/chat/stream | POST | [ ] |
+| 24 | T06 | 获取工具列表 | /learn/tool/list | GET | [ ] |
+
 ---
 
 ## 测试命令
@@ -116,6 +138,98 @@ curl -X POST http://localhost:8080/ai/chat/stream \
   -w "\nHTTP Status: %{http_code}\n"
 ```
 
+### M01 - 带记忆对话(正常)
+```bash
+curl -X POST http://localhost:8080/ai/learn/memory/chat \
+  -H "Content-Type: application/json" \
+  -d '{"conversationId":"test-001","content":"你好"}' \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
+### M02 - 带记忆对话(空会话ID)
+```bash
+curl -X POST http://localhost:8080/ai/learn/memory/chat \
+  -H "Content-Type: application/json" \
+  -d '{"content":"你好"}' \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
+### M03 - 带记忆对话(空消息)
+```bash
+curl -X POST http://localhost:8080/ai/learn/memory/chat \
+  -H "Content-Type: application/json" \
+  -d '{"conversationId":"test-001","content":""}' \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
+### M04 - 记忆功能验证(第二轮对话)
+```bash
+curl -X POST http://localhost:8080/ai/learn/memory/chat \
+  -H "Content-Type: application/json" \
+  -d '{"conversationId":"test-001","content":"我刚才说了什么？"}' \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
+### M05 - 带记忆流式对话
+```bash
+curl -X POST http://localhost:8080/ai/learn/memory/chat/stream \
+  -H "Content-Type: application/json" \
+  -d '{"conversationId":"test-002","content":"请写一首短诗"}' \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
+### M06 - 清除记忆
+```bash
+curl -X DELETE http://localhost:8080/ai/learn/memory/test-001 \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
+### T01 - 日期时间工具
+```bash
+curl -X POST http://localhost:8080/ai/learn/tool/chat \
+  -H "Content-Type: application/json" \
+  -d '{"content":"今天星期几？现在几点了？"}' \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
+### T02 - 计算器工具
+```bash
+curl -X POST http://localhost:8080/ai/learn/tool/chat \
+  -H "Content-Type: application/json" \
+  -d '{"content":"帮我算一下 123 + 456，再算一下 100 / 5"}' \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
+### T03 - 带工具对话(空消息)
+```bash
+curl -X POST http://localhost:8080/ai/learn/tool/chat \
+  -H "Content-Type: application/json" \
+  -d '{"content":""}' \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
+### T04 - 选择性启用工具
+```bash
+curl -X POST http://localhost:8080/ai/learn/tool/chat \
+  -H "Content-Type: application/json" \
+  -d '{"content":"现在几点了？","enabledTools":["datetime"]}' \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
+### T05 - 带工具流式对话
+```bash
+curl -X POST http://localhost:8080/ai/learn/tool/chat/stream \
+  -H "Content-Type: application/json" \
+  -d '{"content":"今天几号？"}' \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
+### T06 - 获取工具列表
+```bash
+curl -X GET http://localhost:8080/ai/learn/tool/list \
+  -w "\nHTTP Status: %{http_code}\n"
+```
+
 ---
 
 ## 预期结果
@@ -133,3 +247,47 @@ curl -X POST http://localhost:8080/ai/chat/stream \
 | C02 | 200 | 返回基于历史上下文的AI响应 |
 | C03 | 400 | 参数校验失败 |
 | C04 | 200 | SSE格式流式返回AI响应 |
+| M01 | 200 | 返回包含 conversationId 和 content 的 JSON |
+| M02 | 400 | 参数校验失败 |
+| M03 | 400 | 参数校验失败 |
+| M04 | 200 | AI 能回答之前对话的内容 |
+| M05 | 200 | SSE 格式流式返回 |
+| M06 | 200 | 返回成功响应 |
+| T01 | 200 | 返回包含日期时间信息的 AI 响应 |
+| T02 | 200 | 返回包含计算结果的 AI 响应 |
+| T03 | 400 | 参数校验失败 |
+| T04 | 200 | 仅使用 datetime 工具 |
+| T05 | 200 | SSE 格式流式返回 |
+| T06 | 200 | 返回 ["datetime", "calculator"] |
+
+---
+
+## 单元测试文件清单
+
+| 文件路径 | 说明 |
+|---------|------|
+| `src/test/java/.../tool/DateTimeToolTest.java` | 日期时间工具单元测试 |
+| `src/test/java/.../tool/CalculatorToolTest.java` | 计算器工具单元测试 |
+| `src/test/java/.../service/MemoryChatServiceTest.java` | Chat Memory Service 测试 |
+| `src/test/java/.../service/ToolChatServiceTest.java` | Tool Calling Service 测试 |
+| `src/test/java/.../manager/MemoryChatManagerTest.java` | Chat Memory Manager 测试 |
+| `src/test/java/.../manager/ToolChatManagerTest.java` | Tool Calling Manager 测试 |
+| `src/test/java/.../controller/MemoryChatControllerTest.java` | Chat Memory Controller 测试 |
+| `src/test/java/.../controller/ToolChatControllerTest.java` | Tool Calling Controller 测试 |
+
+## 运行测试
+
+```bash
+# 运行所有测试
+D:/dev_soft/apache-maven-3.6.3/bin/mvn.cmd test
+
+# 运行指定测试类
+D:/dev_soft/apache-maven-3.6.3/bin/mvn.cmd test -Dtest=DateTimeToolTest
+D:/dev_soft/apache-maven-3.6.3/bin/mvn.cmd test -Dtest=CalculatorToolTest
+D:/dev_soft/apache-maven-3.6.3/bin/mvn.cmd test -Dtest=MemoryChatServiceTest
+D:/dev_soft/apache-maven-3.6.3/bin/mvn.cmd test -Dtest=ToolChatServiceTest
+
+# 运行 Controller 测试
+D:/dev_soft/apache-maven-3.6.3/bin/mvn.cmd test -Dtest=MemoryChatControllerTest
+D:/dev_soft/apache-maven-3.6.3/bin/mvn.cmd test -Dtest=ToolChatControllerTest
+```

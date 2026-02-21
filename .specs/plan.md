@@ -181,10 +181,91 @@
 
 ---
 
+## Phase 7: Chat Memory 模块
+
+**目标**：实现带记忆的对话功能
+
+### 7.1 配置类
+
+| 文件 | 说明 |
+|------|------|
+| `config/ChatMemoryConfig.java` | 配置 ChatMemory Bean（InMemory 存储，保留20条消息） |
+
+### 7.2 DTO/VO 定义
+
+| 文件 | 说明 |
+|------|------|
+| `model/dto/MemoryChatRequestDTO.java` | 请求参数（conversationId, content） |
+| `model/vo/MemoryChatVO.java` | 响应对象（conversationId, content, createTime） |
+
+### 7.3 Manager 实现
+
+| 文件 | 说明 |
+|------|------|
+| `manager/MemoryChatManager.java` | 封装 ChatClient + ChatMemory，提供同步/流式调用 |
+
+### 7.4 Service 实现
+
+| 文件 | 说明 |
+|------|------|
+| `service/MemoryChatService.java` | 服务接口 |
+| `service/impl/MemoryChatServiceImpl.java` | 服务实现 |
+
+### 7.5 Controller 实现
+
+| 文件 | 说明 |
+|------|------|
+| `controller/MemoryChatController.java` | REST 接口（同步/流式对话、清除记忆） |
+
+**验收标准**：AI 能记住之前对话内容，多轮对话正常工作
+
+---
+
+## Phase 8: Tool Calling 模块
+
+**目标**：实现 AI 工具调用功能
+
+### 8.1 工具类实现
+
+| 文件 | 说明 |
+|------|------|
+| `tool/DateTimeTool.java` | 日期时间工具（@Tool 注解示例） |
+| `tool/CalculatorTool.java` | 计算器工具（@ToolParam 参数示例） |
+
+### 8.2 DTO/VO 定义
+
+| 文件 | 说明 |
+|------|------|
+| `model/dto/ToolChatRequestDTO.java` | 请求参数（content, enabledTools） |
+| `model/vo/ToolChatVO.java` | 响应对象（content, createTime） |
+
+### 8.3 Manager 实现
+
+| 文件 | 说明 |
+|------|------|
+| `manager/ToolChatManager.java` | 封装 ChatClient + Tools，提供同步/流式调用 |
+
+### 8.4 Service 实现
+
+| 文件 | 说明 |
+|------|------|
+| `service/ToolChatService.java` | 服务接口 |
+| `service/impl/ToolChatServiceImpl.java` | 服务实现 |
+
+### 8.5 Controller 实现
+
+| 文件 | 说明 |
+|------|------|
+| `controller/ToolChatController.java` | REST 接口（同步/流式对话、工具列表） |
+
+**验收标准**：AI 能正确调用日期时间工具和计算器工具返回结果
+
+---
+
 ## 文件清单总览
 
 ```
-待创建文件（共 20+ 个）：
+待创建文件（共 30+ 个）：
 
 src/main/java/com/shinelon/hello/
 ├── HelloSpringAiApplication.java
@@ -195,27 +276,44 @@ src/main/java/com/shinelon/hello/
 │       ├── BusinessException.java
 │       └── GlobalExceptionHandler.java
 ├── config/
-│   └── (可选配置类)
+│   └── ChatMemoryConfig.java              # ChatMemory 配置
 ├── controller/
 │   ├── ChatController.java
-│   └── SessionController.java
+│   ├── SessionController.java
+│   ├── MemoryChatController.java          # Chat Memory 控制器
+│   └── ToolChatController.java            # Tool Calling 控制器
 ├── dao/
 │   ├── ChatSessionDao.java
 │   └── ChatMessageDao.java
 ├── manager/
-│   └── ZhipuAiManager.java
+│   ├── ZhipuAiManager.java
+│   ├── MemoryChatManager.java             # Chat Memory Manager
+│   └── ToolChatManager.java               # Tool Calling Manager
 ├── model/
 │   ├── entity/
 │   │   ├── ChatSessionDO.java
 │   │   └── ChatMessageDO.java
 │   ├── dto/
-│   │   └── ChatRequestDTO.java
+│   │   ├── ChatRequestDTO.java
+│   │   ├── MemoryChatRequestDTO.java      # Chat Memory 请求 DTO
+│   │   └── ToolChatRequestDTO.java        # Tool Calling 请求 DTO
 │   └── vo/
 │       ├── MessageVO.java
-│       └── SessionVO.java
-└── service/
-    ├── ChatService.java
-    └── impl/ChatServiceImpl.java
+│       ├── SessionVO.java
+│       ├── MemoryChatVO.java              # Chat Memory 响应 VO
+│       └── ToolChatVO.java                # Tool Calling 响应 VO
+├── service/
+│   ├── ChatService.java
+│   ├── MemoryChatService.java             # Chat Memory 服务接口
+│   ├── ToolChatService.java               # Tool Calling 服务接口
+│   └── impl/
+│       ├── ChatServiceImpl.java
+│       ├── MemoryChatServiceImpl.java     # Chat Memory 服务实现
+│       └── ToolChatServiceImpl.java       # Tool Calling 服务实现
+├── tool/
+│   ├── DateTimeTool.java                  # 日期时间工具
+│   └── CalculatorTool.java                # 计算器工具
+└── ...
 
 src/main/resources/
 ├── application.yml
