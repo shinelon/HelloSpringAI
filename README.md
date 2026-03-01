@@ -18,6 +18,9 @@ Spring Boot + Spring AI 智谱AI集成示例项目。
 - Tool Calling (工具调用)
   - 日期时间工具
   - 计算器工具
+- RAG 检索增强生成
+  - 简单版
+  - 进阶版 (RetrievalAugmentationAdvisor + 查询改写)
 
 ## 快速开始
 
@@ -139,6 +142,62 @@ Content-Type: application/json
 |---------|---------|
 | `dateTimeTool` | 获取当前日期和时间 |
 | `calculatorTool` | 执行数学计算 |
+
+### RAG (检索增强生成)
+
+```bash
+# 获取已加载的文档列表
+GET /ai/learn/rag/documents
+
+# 简单版 RAG 对话
+POST /ai/learn/rag/simple/chat
+Content-Type: application/json
+
+{
+  "query": "公司的核心业务是什么？"
+}
+
+# 简单版 RAG 流式对话
+POST /ai/learn/rag/simple/chat/stream
+Content-Type: application/json
+
+{
+  "query": "介绍一下你们的产品"
+}
+
+# 进阶版 RAG 对话（含查询改写）
+POST /ai/learn/rag/advanced/chat
+Content-Type: application/json
+
+{
+  "query": "我想了解一下你们公司主要是做什么的"
+}
+
+# 进阶版 RAG 流式对话
+POST /ai/learn/rag/advanced/chat/stream
+Content-Type: application/json
+
+{
+  "query": "技术架构是怎样的？"
+}
+```
+
+#### RAG 版本对比
+
+| 版本 | 技术方案 | 特点 |
+|------|----------|------|
+| 简单版 | QuestionAnswerAdvisor | 开箱即用，代码简洁 |
+| 进阶版 | RetrievalAugmentationAdvisor | 支持查询改写，模块化架构 |
+
+#### 预置文档
+
+| 文档 | 内容概要 |
+|------|----------|
+| 公司介绍 | 企业背景、核心业务、发展历程 |
+| 产品说明 | 主要产品、功能特性 |
+| 技术架构 | 系统架构、技术栈 |
+| 常见问题 | FAQ、故障排查 |
+| 联系方式 | 客服电话、邮箱、地址 |
 
 ## 项目结构
 
