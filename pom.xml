@@ -82,6 +82,20 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Spring AI RAG Advisors -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-advisors-vector-store</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+
+        <!-- Spring AI RAG Modules -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-rag</artifactId>
+            <version>${spring-ai.version}</version>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
