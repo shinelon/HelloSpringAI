@@ -13,7 +13,7 @@
 ---
 ## 1. 技术栈与环境
 - **语言**: JAVA (版本 = 17)
-  - 使用jdk8 路径 C:\Program Files\Java\jdk-17.0.13
+  - 使用jdk 路径 C:\Program Files\Java\jdk-17.0.13
   - 项目的编码格式为utf-8
   - 包名要求：com.shinelon.hello
   - content-path要求：/ai
