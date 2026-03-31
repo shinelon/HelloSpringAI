@@ -20,17 +20,17 @@
 
 ---
 
-## Task 1: 添加 OpenAI starter 依赖
+## Task 1: 替换依赖（移除智谱，添加 OpenAI）
 
 **Files:**
 - Modify: `pom.xml:52-57`
 
-- [ ] **Step 1: 添加依赖**
+- [ ] **Step 1: 替换依赖**
 
-在 `pom.xml` 的 `dependencies` 节点下，添加 OpenAI starter：
+将 `spring-ai-starter-model-zhipuai` 替换为 `spring-ai-starter-model-openai`：
 
 ```xml
-<!-- Spring AI OpenAI -->
+<!-- Spring AI OpenAI (替换原有的 zhipuai) -->
 <dependency>
     <groupId>org.springframework.ai</groupId>
     <artifactId>spring-ai-starter-model-openai</artifactId>
@@ -38,7 +38,7 @@
 </dependency>
 ```
 
-位置在 `spring-ai-starter-model-zhipuai` 之后。
+删除 `spring-ai-starter-model-zhipuai` 依赖。
 
 - [ ] **Step 2: 验证依赖**
 
@@ -57,31 +57,22 @@ git commit -m "feat: add spring-ai-starter-model-openai dependency"
 
 ---
 
-## Task 2: 更新 application.yml 添加 OpenAI 配置
+## Task 2: 更新 application.yml 为 OpenAI 配置
 
 **Files:**
-- Modify: `application.yml:34-42`
+- Modify: `application.yml`
 
-- [ ] **Step 1: 添加 OpenAI 配置**
+- [ ] **Step 1: 替换为 OpenAI 配置**
 
-在 `spring.ai` 节点下，添加 `openai` 配置段：
+将 `spring.ai` 节点下的 zhipuai 配置替换为 OpenAI 配置：
 
 ```yaml
 spring:
   ai:
-    provider: zhipuai
-    zhipuai:
-      api-key: ${ZHIPUAI_API_KEY:123}
-      chat:
-        enabled: true
-        options:
-          model: glm-4-flash
-          temperature: 0.7
     openai:
       api-key: ${OPENAI_API_KEY:}
       base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
       chat:
-        enabled: false
         options:
           model: gpt-4o-mini
           temperature: 0.7
@@ -107,20 +98,17 @@ git commit -m "feat: add OpenAI configuration with mutual exclusion"
 
 - [ ] **Step 1: 更新测试配置**
 
-读取 `application-test.yml`，修正 `zhipu` → `zhipuai`（现有配置有拼写错误），并添加 OpenAI 配置：
+读取 `application-test.yml`，将 zhipuai 配置替换为 OpenAI 配置：
 
 ```yaml
 spring:
   ai:
-    provider: openai
-    zhipuai:
-      api-key: ${ZHIPUAI_API_KEY:test-api-key}
-      chat:
-        enabled: false
     openai:
       api-key: ${OPENAI_API_KEY:test-key}
       chat:
-        enabled: true
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
 ```
 
 - [ ] **Step 2: 提交**
@@ -161,36 +149,20 @@ D:/dev_soft/apache-maven-3.6.3/bin/mvn.cmd test -q
 
 ## 使用说明
 
-### 切换为 OpenAI
+### 配置 OpenAI
 
 修改 `application.yml`：
 
 ```yaml
 spring:
   ai:
-    provider: openai
-    zhipuai:
-      chat:
-        enabled: false
     openai:
       api-key: your-openai-api-key
-      base-url: your-custom-base-url  # 可选
+      base-url: your-custom-base-url  # 可选，默认 https://api.openai.com/v1
       chat:
-        enabled: true
-```
-
-### 切换为 ZhipuAI
-
-```yaml
-spring:
-  ai:
-    provider: zhipuai
-    zhipuai:
-      chat:
-        enabled: true
-    openai:
-      chat:
-        enabled: false
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
 ```
 
 ---
@@ -198,7 +170,7 @@ spring:
 ## 验证清单
 
 - [ ] `spring-ai-starter-model-openai` 依赖已添加
-- [ ] `application.yml` 包含 zhipuai 和 openai 两套配置
-- [ ] 互斥机制：`enabled` 属性控制
+- [ ] `spring-ai-starter-model-zhipuai` 依赖已移除
+- [ ] `application.yml` 包含 OpenAI 配置
 - [ ] 项目可正常编译
 - [ ] 测试可通过
