@@ -18,7 +18,7 @@
 
 ### 4.1 配置设计
 
-**互斥开关**：`spring.ai.provider` (值为 `zhipuai` 或 `openai`)
+**互斥开关**：`spring.ai.provider` (值为 `zhipuai` 或 `openai`，默认 `zhipuai`)
 
 **ZhipuAI 配置示例**：
 ```yaml
@@ -50,44 +50,41 @@ spring:
 
 ### 4.2 条件加载机制
 
-使用 Spring `@ConditionalOnProperty` 控制 ChatClient.Builder 的创建：
+现有 managers（如 `MemoryChatManager`、`ToolChatManager`、`RagChatManager`、`RbacChatManager`）已直接依赖 `ChatClient.Builder`：
 
-| Provider | 启用的配置类 | 条件 |
-|----------|-------------|------|
-| zhipuai | ZhipuChatClientBuilderConfig | `spring.ai.provider=zhipuai` |
-| openai | OpenAiChatClientBuilderConfig | `spring.ai.provider=openai` |
-
-### 4.3 架构调整
-
-**新增接口**：
-- `AiManager`：定义 AI 调用的统一接口
-
-**重构现有类**：
-- `ZhipuAiManager` → 实现 `AiManager` 接口
-
-**新增类**：
-- `OpenAiManager`：实现 `AiManager` 接口，提供 OpenAI 调用能力
-- `AiChatClientBuilderConfig`：条件化配置类，根据 provider 决定创建哪个 ChatClient.Builder
-
-**目录结构**：
+```java
+// 现有代码示例
+private final ChatClient.Builder chatClientBuilder;
 ```
-src/main/java/com/shinelon/hello/
-├── config/
-│   └── AiChatClientBuilderConfig.java   # 条件化配置
-├── manager/
-│   ├── AiManager.java                   # 统一接口
-│   ├── ZhipuAiManager.java             # 实现AiManager
-│   └── OpenAiManager.java              # 实现AiManager
+
+Spring AI 根据配置自动创建对应 provider 的 `ChatClient.Builder`。通过 `@ConditionalOnProperty` 控制哪个 provider 的配置生效即可，现有 managers 无需任何修改。
+
+**配置类**：
+
+| Provider | 配置类 | 条件 |
+|----------|--------|------|
+| zhipuai | ZhipuAiAutoConfiguration | `spring.ai.provider=zhipuai` 或未配置 |
+| openai | OpenAiAutoConfiguration | `spring.ai.provider=openai` |
+
+### 4.3 依赖更新
+
+**pom.xml 新增**：
+```xml
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-model-openai</artifactId>
+    <version>${spring-ai.version}</version>
+</dependency>
 ```
 
 ### 4.4 现有功能兼容性
 
 | 功能 | 兼容性 | 说明 |
 |------|--------|------|
-| Chat Memory | 兼容 | 依赖 AiManager 接口 |
+| Chat Memory | 兼容 | `MemoryChatManager` 依赖 `ChatClient.Builder` |
 | Tool Calling | 兼容 | Spring AI 统一处理 |
-| RAG | 兼容 | 依赖 AiManager 接口 |
-| RBAC | 兼容 | 依赖 AiManager 接口 |
+| RAG | 兼容 | `RagChatManager` 依赖 `ChatClient.Builder` |
+| RBAC | 兼容 | `RbacChatManager` 依赖 `ChatClient.Builder` |
 
 ## 5. 配置参数
 
@@ -110,12 +107,9 @@ src/main/java/com/shinelon/hello/
 
 ## 6. 实现步骤
 
-1. 新增 `AiManager` 接口
-2. 重构 `ZhipuAiManager` 实现 `AiManager`
-3. 新增 `OpenAiManager` 实现 `AiManager`
-4. 新增 `AiChatClientBuilderConfig` 条件化配置
-5. 更新 `application.yml` 添加 OpenAI 配置示例
-6. 单元测试
+1. pom.xml 添加 `spring-ai-starter-model-openai` 依赖
+2. 创建条件化配置类 `AiProviderConfig`，根据 `spring.ai.provider` 激活对应自动配置
+3. 测试环境配置：在 `application-test.yml` 中设置默认 provider
 
 ## 7. 测试验证
 
