@@ -107,9 +107,55 @@ Spring AI 根据配置自动创建对应 provider 的 `ChatClient.Builder`。通
 
 ## 6. 实现步骤
 
-1. pom.xml 添加 `spring-ai-starter-model-openai` 依赖
-2. 创建条件化配置类 `AiProviderConfig`，根据 `spring.ai.provider` 激活对应自动配置
-3. 测试环境配置：在 `application-test.yml` 中设置默认 provider
+### 步骤1：添加依赖
+
+pom.xml 添加 OpenAI starter：
+```xml
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-model-openai</artifactId>
+    <version>${spring-ai.version}</version>
+</dependency>
+```
+
+### 步骤2：自动配置冲突处理
+
+Spring AI 的 `ZhipuAiAutoConfiguration` 和 `OpenAiAutoConfiguration` 会同时存在于 classpath，需要通过配置排除不使用的 provider。
+
+**方案：使用 `spring.ai.{provider}.chat.enabled=false` 禁用不需要的配置**
+
+```yaml
+# ZhipuAI 模式 - 禁用 OpenAI
+spring:
+  ai:
+    provider: zhipuai
+    zhipuai:
+      chat:
+        enabled: true
+    openai:
+      chat:
+        enabled: false
+
+# OpenAI 模式 - 禁用 ZhipuAI
+spring:
+  ai:
+    provider: openai
+    zhipuai:
+      chat:
+        enabled: false
+    openai:
+      chat:
+        enabled: true
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+```
+
+Spring AI 的自动配置类会检查对应的 `enabled` 属性，因此只需在配置文件中设置即可实现互斥。
+
+### 步骤3：配置切换验证
+
+验证步骤：
+1. 设置 `spring.ai.provider=zhipuai` + `zhipuai.chat.enabled=true` + `openai.chat.enabled=false` → 使用智谱AI
+2. 设置 `spring.ai.provider=openai` + `zhipuai.chat.enabled=false` + `openai.chat.enabled=true` → 使用 OpenAI
 
 ## 7. 测试验证
 
