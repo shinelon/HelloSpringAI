@@ -6,11 +6,6 @@ server:
 spring:
   application:
     name: hello-spring-ai-test
-  autoconfigure:
-    exclude:
-      - org.springframework.ai.model.zhipuai.autoconfigure.ZhiPuAiChatAutoConfiguration
-      - org.springframework.ai.model.zhipuai.autoconfigure.ZhiPuAiEmbeddingAutoConfiguration
-      - org.springframework.ai.model.zhipuai.autoconfigure.ZhiPuAiImageAutoConfiguration
 
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
@@ -32,15 +27,12 @@ spring:
       enabled: false
 
   ai:
-    provider: openai
-    zhipuai:
-      api-key: ${ZHIPUAI_API_KEY:test-api-key}
-      chat:
-        enabled: false
     openai:
       api-key: ${OPENAI_API_KEY:test-key}
       chat:
-        enabled: true
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
 
 logging:
   level:
