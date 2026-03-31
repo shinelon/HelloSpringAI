@@ -43,7 +43,7 @@
 - [ ] **Step 2: 验证依赖**
 
 ```bash
-D:/dev_soft/apache-maven-3.6.3/bin/mvn.cmd dependency:tree -q | grep openai
+D:/dev_soft/apache-maven-3.6.3/bin/mvn.cmd dependency:tree -q | findstr openai
 ```
 
 预期输出包含 `spring-ai-starter-model-openai`
@@ -69,6 +69,7 @@ git commit -m "feat: add spring-ai-starter-model-openai dependency"
 ```yaml
 spring:
   ai:
+    provider: zhipuai
     zhipuai:
       api-key: ${ZHIPUAI_API_KEY:123}
       chat:
@@ -106,13 +107,14 @@ git commit -m "feat: add OpenAI configuration with mutual exclusion"
 
 - [ ] **Step 1: 更新测试配置**
 
-读取 `application-test.yml`，将 provider 设置为 openai 模式：
+读取 `application-test.yml`，修正 `zhipu` → `zhipuai`（现有配置有拼写错误），并添加 OpenAI 配置：
 
 ```yaml
 spring:
   ai:
     provider: openai
     zhipuai:
+      api-key: ${ZHIPUAI_API_KEY:test-api-key}
       chat:
         enabled: false
     openai:
