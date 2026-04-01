@@ -74,7 +74,8 @@
       "Bash(timeout:*)",
       "Bash(ZHIPUAI_API_KEY=\"$ZHIPUAI_API_KEY\" D:/dev_soft/apache-maven-3.6.3/bin/mvn.cmd spring-boot:run -q)",
       "Bash(gh auth:*)",
-      "WebSearch"
+      "WebSearch",
+      "mcp__tavily__tavily_skill"
     ],
     "deny": [
       "Read(./.env*)",
